@@ -92,7 +92,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", res);
         }
         Commands::Remove(RemoveArgs { name }) => {
-            alias_to_dir.remove(name.as_str());
+            if alias_to_dir.contains_key(name.as_str()) {
+                alias_to_dir.remove(name.as_str());
+                println!("\x1b[33mAlias \x1b[32m{} \x1b[33mis removed \x1b[0m", name);
+            } else {
+                println!(
+                    "\x1b[33mAlias \x1b[32m{} \x1b[33ma does not exist \x1b[0m",
+                    name
+                );
+            }
         }
     }
 

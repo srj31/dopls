@@ -12,16 +12,17 @@ pub enum Commands {
     List,
 
     /// Remove an alias
+    #[command(visible_alias = "rm")]
     Remove(RemoveArgs),
 }
 
 #[derive(Args)]
 pub struct AddArgs {
-    /// Path to the directory to add
-    pub path: PathBuf,
-
     /// Alias for accessing the directory
     pub name: String,
+
+    /// Path to the directory to add
+    pub path: PathBuf,
 }
 
 #[derive(Args)]
