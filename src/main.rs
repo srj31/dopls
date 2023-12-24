@@ -1,4 +1,4 @@
-use std::{fs, io::Write, path::PathBuf};
+use std::{collections::HashMap, os::unix::process::CommandExt, path::PathBuf, process};
 
 use clap::{Args, Parser, Subcommand};
 extern crate dirs;
@@ -14,8 +14,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Adds files to myapp
+    /// Adds files to dopls config
     Add(AddArgs),
+    /// Open edtior for the aliased directory
+    Code(CodeArgs),
 }
 
 #[derive(Args)]
@@ -23,7 +25,13 @@ struct AddArgs {
     /// Path to the directory to add
     path: PathBuf,
 
-    /// Unique name for accessing the directory
+    /// Alias for accessing the directory
+    name: String,
+}
+
+#[derive(Args)]
+struct CodeArgs {
+    /// Alias of the directory
     name: String,
 }
 
@@ -52,14 +60,40 @@ fn save_dopls_config(
     Ok(())
 }
 
+fn open_nvim(code_dir: &str) -> () {
+    let _nvim_process = process::Command::new("nvim")
+        .current_dir(code_dir)
+        .args(["."])
+        .exec();
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
     let (config_path, mut config_content) = load_dopls_config()?;
+    let mut alias_to_dir = HashMap::<&str, PathBuf>::new();
+
+    for line in config_content.lines() {
+        if let Some((alias, path)) = line.split_once(':') {
+            alias_to_dir.insert(alias, PathBuf::from(path));
+        }
+    }
 
     match args.command {
         Commands::Add(AddArgs { path, name }) => {
-            config_content += format!("\"{}\": \"{}\"\n", name, path.to_str().unwrap()).as_str();
+            if alias_to_dir.contains_key(name.as_str()) {
+                println!(
+                    "\x1b[33mAlias \x1b[32m{} \x1b[33malready exists \x1b[0m",
+                    name
+                );
+            }
+            config_content += format!("{}:{}\n", name, path.to_str().unwrap()).as_str();
+        }
+        Commands::Code(CodeArgs { name }) => {
+            if let Some(dir) = alias_to_dir.get(name.as_str()) {
+                println!("Opening {}", dir.to_str().unwrap());
+                open_nvim(dir.to_str().unwrap());
+            }
         }
     }
 
