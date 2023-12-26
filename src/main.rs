@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     match args.command {
-        Commands::Add(AddArgs { path, name }) => {
+        Commands::Add(AddArgs { mut path, name }) => {
             if alias_to_dir.contains_key(name.as_str()) {
                 println!(
                     "\x1b[33mAlias \x1b[32m{} \x1b[33malready exists \x1b[0m",
@@ -85,12 +85,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if path.is_absolute() {
                     alias_to_dir.insert(name, path);
                 } else {
+                    match path.strip_prefix("./") {
+                        Ok(p) => path = p.to_owned(),
+                        _ => path = path,
+                    }
+
                     let pwd_output = process::Command::new("pwd")
                         .output()
                         .expect("Could not run pwd");
                     let pwd = String::from_utf8_lossy(&pwd_output.stdout);
 
-                    let full_path = pwd.to_string() + "/" + path.to_str().unwrap();
+                    let full_path =
+                        pwd.to_string().replace("\n", "") + "/" + path.to_str().unwrap();
                     alias_to_dir.insert(name, full_path.into());
                 }
             }
@@ -122,7 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("\x1b[33mAlias \x1b[32m{} \x1b[33mis removed \x1b[0m", name);
             } else {
                 println!(
-                    "\x1b[33mAlias \x1b[32m{} \x1b[33ma does not exist \x1b[0m",
+                    "\x1b[33mAlias \x1b[31m{}\x1b[33m does not exist \x1b[0m",
                     name
                 );
             }
