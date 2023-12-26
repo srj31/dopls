@@ -55,6 +55,13 @@ fn open_nvim(code_dir: &str) -> () {
         .exec();
 }
 
+fn open_code(code_dir: &str) -> () {
+    let _code_process = process::Command::new("code")
+        .current_dir(code_dir)
+        .args(["."])
+        .exec();
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::parse();
 
@@ -88,10 +95,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        Commands::Code(CodeArgs { name }) => {
+        Commands::Code(CodeArgs { name, code_editor }) => {
             if let Some(dir) = alias_to_dir.get(name.as_str()) {
                 println!("Opening {}", dir.to_str().unwrap());
-                open_nvim(dir.to_str().unwrap());
+                match code_editor {
+                    Some(_use_code) => {
+                        open_code(dir.to_str().unwrap());
+                    }
+                    None => {
+                        open_nvim(dir.to_str().unwrap());
+                    }
+                }
             }
         }
         Commands::List => {

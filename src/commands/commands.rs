@@ -29,6 +29,10 @@ pub struct AddArgs {
 pub struct CodeArgs {
     /// Alias of the directory
     pub name: String,
+
+    /// Editor to use
+    #[arg(short, action = clap::ArgAction::SetTrue)]
+    pub code_editor: Option<bool>,
 }
 
 #[derive(Args)]
