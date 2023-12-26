@@ -99,9 +99,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Some(dir) = alias_to_dir.get(name.as_str()) {
                 println!("Opening {}", dir.to_str().unwrap());
                 match code_editor {
-                    Some(_use_code) => {
-                        open_code(dir.to_str().unwrap());
-                    }
+                    Some(_use_code) => match _use_code {
+                        true => open_code(dir.to_str().unwrap()),
+                        false => open_nvim(dir.to_str().unwrap()),
+                    },
                     None => {
                         open_nvim(dir.to_str().unwrap());
                     }
