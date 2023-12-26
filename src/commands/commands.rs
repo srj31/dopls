@@ -30,7 +30,7 @@ pub struct CodeArgs {
     /// Alias of the directory
     pub name: String,
 
-    /// Editor to use
+    /// Use code . command to open the editor
     #[arg(short, action = clap::ArgAction::SetTrue)]
     pub code_editor: Option<bool>,
 }
