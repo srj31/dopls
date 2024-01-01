@@ -12,10 +12,10 @@ cargo install --path .
 
 ## Usage
 
-- To alias the current directory as name1
+- To alias the the directory ./project as name1
 
 ```
-dopls add name1 .
+dopls add name1 ./project
 ```
 
 - To see the list of aliases saved
@@ -23,11 +23,17 @@ dopls add name1 .
 ```
 $ dopls list
 
-name1   /Users/srj31/Documents/dopls
+name1   /Users/srj31/Documents/dopls/project
 ```
 
 - Open the directory in the editor
 
 ```
+# to open in nvim
 $ dopls code name1
+
+# to open in vscode
+$ dopls code name1 -c
 ```
+
+The default editor is `nvim` and if you want to use another editor use the respective flags
