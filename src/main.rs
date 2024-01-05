@@ -1,5 +1,10 @@
 mod commands;
-use std::{collections::HashMap, os::unix::process::CommandExt, path::PathBuf, process};
+use std::{
+    collections::HashMap,
+    os::unix::process::CommandExt,
+    path::PathBuf,
+    process::{self, Stdio},
+};
 
 use clap::Parser;
 extern crate dirs;
@@ -48,18 +53,17 @@ fn deserialize_alias_to_dir(alias_to_dir: HashMap<String, PathBuf>) -> String {
     config_content
 }
 
-fn open_nvim(code_dir: &str) -> () {
-    let _nvim_process = process::Command::new("nvim")
+fn open_custom_editor(code_dir: &str, cmd: &str) -> () {
+    let _code_process = process::Command::new(cmd)
         .current_dir(code_dir)
         .args(["."])
         .exec();
-}
-
-fn open_code(code_dir: &str) -> () {
-    let _code_process = process::Command::new("code")
-        .current_dir(code_dir)
-        .args(["."])
-        .exec();
+    if let Some(_) = _code_process.raw_os_error() {
+        println!(
+            "\x1b[31mError: running the command {}, ensure it exists in your path\x1b[0m",
+            cmd
+        );
+    }
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -101,20 +105,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
         }
-        Commands::Code(CodeArgs { name, code_editor }) => {
-            if let Some(dir) = alias_to_dir.get(name.as_str()) {
+        Commands::Code(CodeArgs {
+            name,
+            code_editor,
+            insider_editor,
+        }) => match alias_to_dir.get(name.as_str()) {
+            Some(dir) => {
                 println!("Opening {}", dir.to_str().unwrap());
-                match code_editor {
-                    Some(_use_code) => match _use_code {
-                        true => open_code(dir.to_str().unwrap()),
-                        false => open_nvim(dir.to_str().unwrap()),
-                    },
-                    None => {
-                        open_nvim(dir.to_str().unwrap());
+                if code_editor == false && insider_editor == false {
+                    open_custom_editor(dir.to_str().unwrap(), "nvim")
+                } else {
+                    if code_editor == true {
+                        open_custom_editor(dir.to_str().unwrap(), "code")
+                    } else if insider_editor == true {
+                        open_custom_editor(dir.to_str().unwrap(), "codei")
                     }
                 }
             }
-        }
+            None => {
+                println!(
+                    "\x1b[33mAlias \x1b[31m{}\x1b[33m does not exist \x1b[0m",
+                    name
+                );
+            }
+        },
         Commands::List => {
             let mut res = String::new();
             for (alias, path) in alias_to_dir.iter() {
