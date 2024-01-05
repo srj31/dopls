@@ -3,7 +3,7 @@ use std::{
     collections::HashMap,
     os::unix::process::CommandExt,
     path::PathBuf,
-    process::{self, Stdio},
+    process::{self},
 };
 
 use clap::Parser;
